@@ -1,0 +1,59 @@
+{
+  "name": "@qaping/rig",
+  "version": "0.1.1",
+  "license": "MIT",
+  "homepage": "https://qaping.dev",
+  "description": "Record one controller session, replay it against every build: a virtual XInput gamepad, screen capture, PresentMon frame times and a run receipt. Windows.",
+  "keywords": [
+    "qaping",
+    "game-qa",
+    "playtest",
+    "regression",
+    "gamepad",
+    "xinput",
+    "vigem",
+    "presentmon",
+    "frame-time",
+    "windows",
+    "replay"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-durango/qaping-rig.git"
+  },
+  "type": "commonjs",
+  "bin": {
+    "qaping-rig": "bin/rig.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin/rig.js",
+    "lib/cli.js",
+    "shims/padd.py",
+    "shims/xinput-tap.ps1",
+    "lib/build-fetch.js",
+    "lib/capture.js",
+    "lib/game-proc.js",
+    "lib/overlay.js",
+    "lib/pad.js",
+    "lib/padscript.js",
+    "lib/receipt.js",
+    "lib/report.js",
+    "lib/scheduler.js",
+    "lib/telemetry-presentmon.js",
+    "scripts/provision.ps1",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bugs": {
+    "url": "https://github.com/alex-durango/qaping-rig/issues"
+  },
+  "scripts": {
+    "test": "node --test test/rig.test.js"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+rig-runs/
+runs/
+tools/
+pins.local.json
+__pycache__/
+*.pyc
+*.tgz
+*.padscript.local.json

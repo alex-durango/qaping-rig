@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a recording, replay, setup, or reporting problem.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Rig and Windows versions
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Controller and game setup
+      description: Include whether Steam Input is enabled and which controller is connected.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include the command, expected behavior, and actual behavior. Remove personal information.
+    validations:
+      required: true

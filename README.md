@@ -14,6 +14,11 @@ controller. It runs locally, with no Qaping account required.
 [Recording guide](https://github.com/alex-durango/qaping-rig/blob/main/docs/recording.md) ·
 [Report a problem](https://github.com/alex-durango/qaping-rig/issues)
 
+**Release status:** this source tree is the 0.1.1 development snapshot; npm
+currently serves 0.1.0. The new `--game-log` option is in the source snapshot.
+To try the current source, clone this repo and use `node bin/rig.js` in place of
+`npx @qaping/rig` below. The Windows prerequisites still apply.
+
 ```
 npx @qaping/rig doctor
 ```
@@ -37,9 +42,10 @@ npx @qaping/rig doctor
   (a load screen, or a hitch the player experiences as waiting), every frame that
   ran 4× the median and at least 50 ms (a stutter), the crash if there was one, and
   every warning the run raised. Alongside them: average fps, p95, p99, 1% low.
-- Every run writes a **`pingfusi-rig-run/v1` receipt** — the build's sha256, the
+- Every run writes a **`pingfusi-rig-run/v1` receipt** — the build source (and a
+  sha256 for zip builds), the
   script's sha256, every input event, the frame-time summary, the exit reason. A
-  run is reproducible from its receipt or it did not happen.
+  receipt identifies the run; keep the original build and input script to replay it.
 
 Replay promises **input determinism**: the same bytes go to the pad at the same
 offsets on every run. `inputs.jsonl` is a pure function of the script and comes out

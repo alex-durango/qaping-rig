@@ -59,7 +59,7 @@ public sealed class QapingRigDesktop : Form {
         refresh=ButtonAt("Refresh",636,134,136,delegate { RefreshGames(); },false);
         LabelAt("Moving the mouse…",26,185,180,28,10);
         mouseMode.Location=new Point(210,183); mouseMode.Size=new Size(560,32); mouseMode.DropDownStyle=ComboBoxStyle.DropDownList;
-        mouseMode.Items.Add("Turns my view (like Minecraft)"); mouseMode.Items.Add("Moves a cursor on screen (like Despiry)"); mouseMode.SelectedIndex=0; Controls.Add(mouseMode);
+        mouseMode.Items.Add("Turns my view"); mouseMode.Items.Add("Moves a cursor on screen"); mouseMode.SelectedIndex=0; Controls.Add(mouseMode);
         LabelAt("Choose what happens during play. Menus are recorded in both.",26,218,744,28,10);
         video.Text="Include video (free tool downloads once if needed: 161 MB)"; video.Checked=true; video.Location=new Point(26,255); video.Size=new Size(744,30); Controls.Add(video);
         record=ButtonAt("Record new session",26,297,280,delegate { StartSession("record"); },true);

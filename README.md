@@ -2,39 +2,61 @@
 
 **Record a playtest. Replay it against the next build.**
 
-A person plays your game once, on a real controller. The rig records the exact
+A person plays your game once, with a controller or keyboard and mouse. The rig records the
 inputs. From then on it can replay that session against every new build through a
-virtual XInput gamepad — recording the screen, measuring frame times, watching for
+virtual XInput gamepad or native Windows keyboard/mouse input — recording the screen, measuring frame times, watching for
 crashes — and write a receipt of what happened.
 
-The rig sends controller input to a packaged Windows game through a virtual Xbox
-controller. It runs locally, with no Qaping account required.
+The rig sends recorded inputs to a packaged Windows game. It runs locally, with
+no Qaping account required.
 
 [Source](https://github.com/alex-durango/qaping-rig) ·
+[Keyboard/mouse walkthrough](https://github.com/alex-durango/qaping-rig/blob/main/docs/keyboard-mouse.md) ·
 [Recording guide](https://github.com/alex-durango/qaping-rig/blob/main/docs/recording.md) ·
 [Report a problem](https://github.com/alex-durango/qaping-rig/issues)
 
-**Release status:** this source tree is the 0.1.1 development snapshot; npm
-currently serves 0.1.0. The new `--game-log` option is in the source snapshot.
-To try the current source, clone this repo and use `node bin/rig.js` in place of
-`npx @qaping/rig` below. The Windows prerequisites still apply.
+**Release status:** this source tree is the 0.2.0 development snapshot; npm
+currently serves 0.1.0. Keyboard/mouse input and `--game-log` are in the source snapshot.
+For keyboard/mouse, use the desktop app below. CLI users can clone this repo
+and use `node bin/rig.js` in place of `npx @qaping/rig`.
 
-```
-npx @qaping/rig doctor
-```
+## Start here: Windows desktop app
+
+1. **[Download the source ZIP](https://github.com/alex-durango/qaping-rig/archive/refs/heads/main.zip)**
+   and extract it.
+2. Double-click **Start Rig.cmd**. First start finds Node.js or downloads a
+   verified local copy. No terminal commands or system-wide installation needed.
+3. Open your game, pause at the starting point, and choose it in the game list.
+4. Click **Record new session**. Video is set up automatically on first use
+   (a 161 MB verified ffmpeg download). Play after the visible countdown; **F8 stops**.
+5. Restore the game's starting save, select the saved session, check the reset
+   reminder and click **Replay selected**.
+
+The controls return when a session finishes. **Watch video** opens the selected
+session's latest capture, and **Open recordings** opens your files. Names and
+folders are automatic; you never need to find a process ID or type a game path.
+Recordings live in `Videos/Qaping Rig` under your user folder. **Import session**
+accepts an existing keyboard/mouse trace without changing it.
+
+Windows 10/11 x64 is required. The app handles setup and recording controls;
+**you restore the game's save and starting view**. Compatibility varies by game.
+See the [walkthrough](https://github.com/alex-durango/qaping-rig/blob/main/docs/keyboard-mouse.md)
+for a Minecraft example and troubleshooting. The CLI remains available below.
 
 ## What it is
 
-- **`record`** — a human plays with a physical Xbox-compatible pad; the session
-  becomes a `pingfusi-padscript/v1` file: sparse full-state keyframes on a
-  drift-corrected tick.
-- **`play`** — that file replays through a virtual pad (a kernel-level ViGEmBus
+- **`record`** — a human plays freely with a physical keyboard/mouse or an
+  Xbox-compatible pad. Keyboard/mouse produces a `qaping-kbmscript/v1` file with
+  timed keys, camera motion and menu positions; controller recording produces
+  sparse full-state keyframes in `pingfusi-padscript/v1`.
+- **`play`** — keyboard/mouse traces replay through native Windows input.
+  Controller traces replay through a virtual pad (a kernel-level ViGEmBus
   device; the game sees a real Xbox 360 controller in `joy.cpl`) against a build
   you point at — a `.zip`, an unzipped directory, or a URL. While it plays, the rig
   records the screen with ffmpeg, samples frame times with PresentMon, notices if
   the game dies, sweeps up the Windows crash dump it left, and stops on its own
   time budget if the build hangs.
-- **`overlay`** — burns the recorded input trace onto the capture, so you can watch
+- **`overlay`** — burns a controller input trace onto the capture, so you can watch
   the footage and the stick/button state together. The graphic is drawn from the
   run's own `inputs.jsonl`, not from a live widget: what you see is what was sent.
 - **`report`** — turns a receipt into readable findings, each stamped with the
@@ -47,9 +69,11 @@ npx @qaping/rig doctor
   script's sha256, every input event, the frame-time summary, the exit reason. A
   receipt identifies the run; keep the original build and input script to replay it.
 
-Replay promises **input determinism**: the same bytes go to the pad at the same
+Controller replay promises **input determinism**: the same bytes go to the pad at the same
 offsets on every run. `inputs.jsonl` is a pure function of the script and comes out
 byte-identical run after run — that is the property the whole thing rests on.
+Keyboard/mouse logs contain the events Windows acknowledged, with actual timing
+recorded separately. Neither mode promises identical gameplay outcomes.
 
 ## Limits
 
@@ -64,22 +88,26 @@ byte-identical run after run — that is the property the whole thing rests on.
   whether the boss fight feels fair still need a person to investigate.
 - **It needs your Windows machine.** See [Requirements](#requirements) and
   [Privacy](#privacy).
+- **Compatibility varies by game.** Games can reject synthetic input, hide their
+  custom cursor from Windows, or change input handling between menus and gameplay.
+  Verify a short recording and replay in your game before relying on it.
 
 ## Requirements
 
 | | |
 |---|---|
-| **Windows 10 or 11**, x64 | the virtual pad is a Windows driver; there is no macOS or Linux path |
-| **Node.js 20+** | |
-| **ViGEmBus driver** | the virtual gamepad's kernel device — installed for you by `vgamepad` below |
-| **Python 3 + `vgamepad`** | the pad feeder: `python -m pip install "vgamepad==0.*"` (accept the driver prompt the first time) |
-| a physical Xbox-compatible controller | for `record` only |
+| **Windows 10 or 11**, x64 | keyboard/mouse uses Windows PowerShell, Raw Input and SendInput; the virtual pad uses a Windows driver |
+| **Node.js 20+** | the desktop launcher downloads a local copy if needed; CLI users install it themselves |
+| **ViGEmBus driver** *(controller replay only)* | the virtual gamepad's kernel device — installed for you by `vgamepad` below |
+| **Python 3 + `vgamepad`** *(controller replay only)* | the pad feeder: `python -m pip install "vgamepad==0.*"` (accept the driver prompt the first time) |
+| a physical Xbox-compatible controller | for controller `record` only |
 | **ffmpeg** *(optional)* | screen capture and `overlay`. Without it, `play --no-capture` still runs and still measures |
 | **PresentMon** *(optional)* | frame times. Without it you get a run and a recording, but no fps numbers |
 
 Two things about the session, both learned the hard way:
 
-- **Run the terminal elevated** for `play` — PresentMon's ETW session needs it.
+- **PresentMon needs an elevated terminal.** Keyboard/mouse without telemetry
+  can run normally; use `--no-telemetry` and match the game's privilege level.
 - **Do not RDP into the machine mid-run.** RDP takes over the console session and
   breaks screen capture. Use a remote-desktop tool that leaves the physical session
   alone.
@@ -90,7 +118,8 @@ Two things about the session, both learned the hard way:
 npx @qaping/rig doctor
 ```
 
-There is also a one-shot provisioner, shipped with the package. Install it first
+There is also a one-shot provisioner for the full controller setup, shipped with
+the package. Keyboard/mouse users can install ffmpeg separately and skip it. Install it first
 (`npm i @qaping/rig`, or `npm i -g @qaping/rig` for a `qaping-rig` on your PATH),
 then run the script **elevated**, once: it installs Python, `vgamepad`, ffmpeg and
 PresentMon, pins each download's sha256 on first run, and enables Windows crash
@@ -104,6 +133,96 @@ Already have the tools somewhere else? Point at them: `RIG_FFMPEG`,
 `RIG_PRESENTMON`.
 
 ## Quick start
+
+### Keyboard and mouse (source snapshot)
+
+Get this source version first; these commands need no npm dependencies:
+
+```powershell
+git clone https://github.com/alex-durango/qaping-rig.git
+cd qaping-rig
+node bin/rig.js version
+```
+
+Install [ffmpeg for Windows](https://ffmpeg.org/download.html#build-windows) for
+video and put it on PATH, or set `RIG_FFMPEG` to its executable. Open the game in
+windowed or borderless mode, back up the starting save with the game closed,
+then reopen it at the same camera, inventory and pause/menu state. Find its
+actual process ID in Task Manager's Details tab. From this source checkout:
+
+```powershell
+node bin/rig.js doctor --input keyboard-mouse
+node bin/rig.js record --input keyboard-mouse --pid 1234 --out sessions/take-01.kbmscript.json --video sessions/take-01.mp4
+# Click Start recording, watch the countdown, play when REC appears. F8 stops.
+# Restore the same starting state. Update --pid if you restarted the game.
+node bin/rig.js play "C:\Games\YourGame" --exe game.exe --pid 1234 --script sessions/take-01.kbmscript.json --no-telemetry
+# Click Start replay at the same starting point. F8 aborts.
+```
+
+Replace `1234` and the game path with actual values. Omit `--pid` on `play` to
+launch the selected executable; Start still gates input until the game is ready.
+Attachment verifies the executable path and never closes the operator's game.
+The walkthrough covers [backup, recording, replay, verification and recovery](https://github.com/alex-durango/qaping-rig/blob/main/docs/keyboard-mouse.md),
+including a Minecraft example. `doctor` also checks optional PresentMon and
+hardware encoding, so a missing optional tool can make it exit nonzero; read
+the individual checks. The command above explicitly skips telemetry.
+
+A visible **Start recording** / **Start replay** button begins a five-second
+countdown. The button stays available until you start, cancel with F8, or close
+the game or recorder. With video enabled, Start briefly shows **Preparing video**;
+the full countdown begins after the first encoded frame. F9 is an optional
+shortcut while the game has focus. The panel then
+shows **REC** / **REPLAY** and an elapsed timer; F8 stops. Pause the game first
+if it locks your mouse, click Start, then resume once REC appears. Preserve that
+same pause/menu state for replay. Play freely: jumps, exploration, interaction,
+building and breaking blocks all become timed input events.
+
+The status panel supports windowed/borderless games and appears in desktop video;
+exclusive fullscreen may hide it. It accepts clicks only before the countdown,
+then lets clicks pass to the game. The Start click requests game focus once;
+focus loss during an active session still stops it. Release controls during the
+countdown. `--countdown <seconds>` changes its length (0–30); `--no-status` hides
+the panel. `--start-delay <seconds>` explicitly selects automatic start (0–120),
+overriding the button and normal countdown. The game must have focus and all
+keys/buttons must be released when either countdown expires.
+The panel closes when the command finishes. After F8, wait for the terminal's
+saved-file message; to bring recording controls back, run `record` again with
+fresh output names. Closing the panel after a completed take does not delete it.
+
+This mode uses stock Windows PowerShell, Raw Input and SendInput; **no Python,
+ViGEmBus or physical controller is needed**. ffmpeg is needed for `--video` and
+replay video; `--no-capture --no-telemetry` permits input-only replay.
+Recording without `--video` writes just the trace. Output files are never overwritten.
+
+The trace preserves scan-code key events, five mouse buttons, both wheel axes,
+and relative mouse deltas. When Windows shows a menu pointer, new recordings
+also save its position inside the game window for movement, clicks and scrolling.
+Replay uses those pixels for menus and raw relative deltas for the hidden camera
+cursor. Restore the same window size, UI scale and menu state; replay stops if
+a recorded menu point is covered by another window or the client size differs.
+Older traces lack these positions and cannot recover them during replay.
+Keep mouse DPI, Windows pointer settings, game sensitivity and camera the same. Games may
+handle synthetic mouse movement differently; verify your game's response before
+relying on a trace. Absolute pointing devices and E1 keys (such as Pause) are
+unsupported. Games drawing their own pointer while hiding the Windows cursor
+still need a compatibility check. F8/F9 are reserved for transport. This is not text-entry automation.
+
+Recording captures physical Raw Input only while the selected process has
+focus. Switching away stops the recording. Replay also stops on focus loss,
+F8, target exit or the time budget, and releases the keys/buttons it pressed.
+It does not force game focus back. Run the rig and game at the same privilege
+level; Windows may refuse input to an elevated game. Never use it to enter
+credentials or private chat text. Video starts after Start, so idle waiting is
+not captured. `--max-minutes` limits active input time, excluding time waiting
+for Start and the countdown. A video startup failure cancels the session.
+
+Keyboard/mouse traces use `qaping-kbmscript/v1`; controller traces retain their
+existing schema. Only native-acknowledged replay events enter the input logs,
+with separate measured timing. An interrupted replay produces an error receipt,
+not a completed-run claim. `overlay` currently supports controller recordings
+only; keep the original keyboard/mouse video and logs.
+
+### Controller
 
 ```bash
 # 1. one human session, on the physical controller
@@ -147,7 +266,7 @@ Everything is written under the directory you ran the command from:
 ```
 rig-runs/<run-id>/
   receipt.json            the run's durable record (pingfusi-rig-run/v1)
-  inputs.jsonl            every pad state sent — a pure function of the script
+  inputs.jsonl            pad states or acknowledged keyboard/mouse events
   inputs-timing.jsonl     when each one actually went out (wall clock)
   presentmon.csv          raw frame times, if PresentMon was there
   recording.mp4           the capture, if ffmpeg was there
@@ -156,8 +275,11 @@ rig-runs/<run-id>/
   <name>.dmp              the crash dump, if it crashed
 ```
 
-`record` writes its padscript to `--out` (default: `session-<timestamp>.padscript.json`
-in the current directory). Set `RIG_RUNS_DIR` to put runs somewhere else.
+`record` writes the trace to `--out` (default: a timestamped `.padscript.json`
+or `.kbmscript.json` in the current directory). Keyboard/mouse also writes a
+`.capture.json` sidecar with hashes, stop reason and video warnings. Set
+`RIG_RUNS_DIR` to put replay runs somewhere else. `sessions/` is ignored by Git
+in this source checkout; keep original traces and footage together there.
 
 ## Privacy
 
@@ -165,9 +287,10 @@ in the current directory). Set `RIG_RUNS_DIR` to put runs somewhere else.
 rig's commands authenticate against anything. Your build, your recording, your
 frame times and your receipts are files on your disk, and nothing uploads them.
 
-The rig makes exactly two kinds of network request, both of them ones you asked
-for: downloading a build when you hand `play` a URL, and downloading the pinned
-tools when you run `provision.ps1`.
+Network requests download a build when you hand `play` a URL, fetch tools when
+you run `provision.ps1`, or set up the desktop app's missing Node.js/ffmpeg tools.
+Desktop downloads are pinned by version and SHA-256, stored in a per-user cache,
+and include their license notices. Nothing from your play session is uploaded.
 
 ## Get a human playtest
 

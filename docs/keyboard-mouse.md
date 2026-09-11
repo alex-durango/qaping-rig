@@ -248,6 +248,24 @@ the game's save/export tools rather than assuming a machine-specific path.
 
 ## Recovery
 
+For the desktop app:
+
+| What you see | What to do |
+| --- | --- |
+| The launcher does not open | Extract the ZIP first, then double-click Start Rig.cmd inside the extracted folder. First start needs an internet connection; a setup error stays visible in the launcher window. |
+| The game is missing | Open the game, then click Refresh. Run the game and rig at the same privilege level. |
+| No countdown over the game | Use windowed/borderless mode. Let video preparation finish before expecting the countdown. |
+| F8 appears not to stop | Check any keyboard Fn/F-lock behavior. Switch back to Qaping Rig and click Stop if it is still active; leaving the game also ends input. Let it finish saving. |
+| The controls disappear | During play the control panel minimizes. It should return after completion. Reopen Start Rig.cmd if the app closed; your saved sessions remain on disk. |
+| Replay is disabled | Choose a running game and saved session, restore that game's starting point, then check the reset reminder. |
+| Video setup fails | Check the internet connection and retry. Uncheck Include video to record/replay inputs without video. Show details has the specific error. |
+| Replay stops or goes off course | Read the message and Show details. Restore the starting save, camera, menu and window size before retrying; check the game-specific limits below. |
+
+### Advanced CLI recovery
+
+These entries refer to commands launched in a terminal. The one-shot CLI panel
+closes after a session; the desktop app returns to its saved-session controls.
+
 | What you see | What to do |
 | --- | --- |
 | No Start panel | Check whether the command is still armed. Use windowed/borderless mode and omit `--no-status`. A completed command needs a fresh invocation. |

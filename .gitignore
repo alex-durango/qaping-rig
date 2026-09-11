@@ -1,6 +1,10 @@
 node_modules/
 rig-runs/
 runs/
+sessions/
+*.mp4
+*.kbmscript.local.json
+*.kbmscript.json.capture.json
 tools/
 pins.local.json
 __pycache__/

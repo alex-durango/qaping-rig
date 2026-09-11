@@ -6,7 +6,7 @@ a video. You choose what to do; no prescribed movement sequence is required.
 Replay repeats those choices and timings. It does not learn to play or adapt to
 changes in the game.
 
-This walkthrough uses the **0.2.2 source snapshot**. npm still serves 0.1.0,
+This walkthrough uses the **0.2.3 source snapshot**. npm still serves 0.1.0,
 which does not include keyboard/mouse support.
 
 ## The easy way: desktop controls
@@ -19,9 +19,9 @@ You need Windows 10/11 x64 and your own installed game.
 1. Open the game in windowed/borderless mode. Preserve a baseline save and pause
    at the starting point (see the save procedure below).
 2. Choose the game in the list. **Refresh** finds newly opened games.
-3. Choose **Moving the mouse… → Moves a cursor on screen (like Despiry)** for pointer-driven games, including
+3. Choose **Moving the mouse… → Moves a cursor on screen** for pointer-driven games, including
    games that draw their own cursor while hiding Windows’ cursor. Leave
-   **Turns my view (like Minecraft)** selected for mouse-look games. Click **Record new session**. Leave **Include video** checked for footage;
+   **Turns my view** selected for mouse-look games. Click **Record new session**. Leave **Include video** checked for footage;
    ffmpeg is downloaded and verified once if it is missing (161 MB). Uncheck it
    for input-only recording. Setup can be cancelled with **Stop**.
 4. The app brings your chosen game forward once and shows a five-second countdown.

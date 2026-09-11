@@ -15,7 +15,7 @@ no Qaping account required.
 [Recording guide](https://github.com/alex-durango/qaping-rig/blob/main/docs/recording.md) ·
 [Report a problem](https://github.com/alex-durango/qaping-rig/issues)
 
-**Release status:** this source tree is the 0.2.2 development snapshot; npm
+**Release status:** this source tree is the 0.2.3 development snapshot; npm
 currently serves 0.1.0. Keyboard/mouse input and `--game-log` are in the source snapshot.
 For keyboard/mouse, use the desktop app below. CLI users can clone this repo
 and use `node bin/rig.js` in place of `npx @qaping/rig`.
@@ -27,9 +27,9 @@ and use `node bin/rig.js` in place of `npx @qaping/rig`.
 2. Double-click **Start Rig.cmd**. First start finds Node.js or downloads a
    verified local copy. No terminal commands or system-wide installation needed.
 3. Open your game, pause at the starting point, and choose it in the game list.
-4. For a pointer-driven game, choose **Moving the mouse… → Moves a cursor on screen (like Despiry)**. This also
+4. For a pointer-driven game, choose **Moving the mouse… → Moves a cursor on screen**. This also
    captures game-drawn cursors when they follow the Windows pointer. For mouse-look
-   games, leave **Turns my view (like Minecraft)** selected. Click **Record new session**. Video is set up automatically on first use
+   games, leave **Turns my view** selected. Click **Record new session**. Video is set up automatically on first use
    (a 161 MB verified ffmpeg download). Play after the visible countdown; **F8 stops**.
 5. Restore the game's starting save, select the saved session, check the reset
    reminder and click **Replay selected**.

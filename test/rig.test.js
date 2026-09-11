@@ -151,7 +151,19 @@ $rejected=$false
 $wrongClient=New-Object Drawing.Rectangle(0,0,1920,1080)
 try { $null=$position.Invoke($null,@($inputData,$cursorData,$wrongClient,$desktop)) } catch { $rejected=$_.Exception.ToString().Contains('client size differs') }
 $raw=$encode.Invoke($null,@($serializer.DeserializeObject('{"kind":"move","dx":12,"dy":-6}')))
-@{dx=$encoded.data.mouse.dx;dy=$encoded.data.mouse.dy;flags=$encoded.data.mouse.flags;rejected=$rejected;rawDx=$raw.data.mouse.dx;rawDy=$raw.data.mouse.dy;rawFlags=$raw.data.mouse.flags}|ConvertTo-Json -Compress
+$capture=[QapingDesktopInput].GetMethod('CursorPosition',[Reflection.BindingFlags]'NonPublic,Static')
+$map=[QapingDesktopInput].GetMethod('CursorPoint',[Reflection.BindingFlags]'NonPublic,Static')
+$recordedClient=New-Object Drawing.Rectangle(100,50,1280,720)
+$hiddenCamera=$capture.Invoke($null,@($false,420,230,$recordedClient,$false))
+$pointer=$capture.Invoke($null,@($false,420,230,$recordedClient,$true))
+$resizedClient=New-Object Drawing.Rectangle(200,150,1920,1080)
+$mapped=$map.Invoke($null,@($pointer,$resizedClient))
+$aspectRejected=$false
+$wrongAspect=New-Object Drawing.Rectangle(0,0,1024,768)
+try { $null=$map.Invoke($null,@($pointer,$wrongAspect)) } catch { $aspectRejected=$_.Exception.ToString().Contains('aspect ratio differs') }
+$edge=$capture.Invoke($null,@($false,1379,769,$recordedClient,$true))
+$mappedEdge=$map.Invoke($null,@($edge,$resizedClient))
+@{dx=$encoded.data.mouse.dx;dy=$encoded.data.mouse.dy;flags=$encoded.data.mouse.flags;rejected=$rejected;rawDx=$raw.data.mouse.dx;rawDy=$raw.data.mouse.dy;rawFlags=$raw.data.mouse.flags;hiddenCameraNull=($null -eq $hiddenCamera);pointer=$pointer;mappedX=$mapped.X;mappedY=$mapped.Y;edgeX=$mappedEdge.X;edgeY=$mappedEdge.Y;aspectRejected=$aspectRejected}|ConvertTo-Json -Compress
 `);
   const run = spawnSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", file,
     "-Source", path.resolve(__dirname, "../shims/keyboard-mouse.cs")], { encoding: "utf8", windowsHide: true, timeout: 15000 });
@@ -162,6 +174,21 @@ $raw=$encode.Invoke($null,@($serializer.DeserializeObject('{"kind":"move","dx":1
   assert.equal(value.flags, 0xe003, "absolute move and left down are one native event");
   assert.equal(value.rejected, true, "never guess coordinates after a resize");
   assert.deepEqual([value.rawDx, value.rawDy, value.rawFlags], [12, -6, 0x2001], "camera deltas remain raw");
+  assert.equal(value.hiddenCameraNull, true);
+  assert.equal(value.pointer.space, "client-normalized", "explicit pointer mode records even a hidden Windows cursor");
+  assert.deepEqual([value.pointer.x, value.pointer.y], [320, 180]);
+  assert.deepEqual([value.mappedX, value.mappedY], [680, 420], "point maps into a moved and proportionally resized window");
+  assert.deepEqual([value.edgeX, value.edgeY], [2119, 1229], "last pixel stays inside the resized client");
+  assert.equal(value.aspectRejected, true, "a changed game viewport must not silently alter targeting");
+});
+
+test("normalized pointer samples retain recorded evidence and reject ambiguous coordinates", () => {
+  const cursor = { space: "client-normalized", x: 320, y: 180, width: 1280, height: 720, u: 320.5 / 1280, v: 180.5 / 720 };
+  const trace = c => ({ schema: kbm.SCHEMA, source: "recorded", duration_ms: 100, timeline: [{ t_ms: 0, input: { kind: "move", dx: 3, dy: 4, cursor: c } }] });
+  assert.deepEqual(kbm.loadScript(JSON.stringify(trace(cursor))), trace(cursor));
+  for (const invalid of [{...cursor,u:0.9},{...cursor,v:NaN},{...cursor,u:undefined},{...cursor,space:"world"}]) assert.throws(() => kbm.loadScript(trace(invalid)), /normalized cursor|cursor space/);
+  assert.equal(desktop.options({"mouse-mode":"pointer"}).mouseMode,"pointer");
+  assert.throws(() => desktop.options({"mouse-mode":"guess"}), /mouse-mode/);
 });
 
 test("keyboard/mouse accepts extended keys, held tails, buttons and both scroll axes", () => {

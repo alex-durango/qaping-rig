@@ -6,7 +6,7 @@ a video. You choose what to do; no prescribed movement sequence is required.
 Replay repeats those choices and timings. It does not learn to play or adapt to
 changes in the game.
 
-This walkthrough uses the **0.2.0 source snapshot**. npm still serves 0.1.0,
+This walkthrough uses the **0.2.1 source snapshot**. npm still serves 0.1.0,
 which does not include keyboard/mouse support.
 
 ## The easy way: desktop controls
@@ -19,7 +19,9 @@ You need Windows 10/11 x64 and your own installed game.
 1. Open the game in windowed/borderless mode. Preserve a baseline save and pause
    at the starting point (see the save procedure below).
 2. Choose the game in the list. **Refresh** finds newly opened games.
-3. Click **Record new session**. Leave **Include video** checked for footage;
+3. Choose **Mouse input → Pointer / aim** for pointer-driven games, including
+   games that draw their own cursor while hiding Windows’ cursor. Leave
+   **Automatic** selected for mouse-look games. Click **Record new session**. Leave **Include video** checked for footage;
    ffmpeg is downloaded and verified once if it is missing (161 MB). Uncheck it
    for input-only recording. Setup can be cancelled with **Stop**.
 4. The app brings your chosen game forward once and shows a five-second countdown.
@@ -40,9 +42,30 @@ it does not copy a video referenced by an imported file. Authored/generated
 imports are labelled so they cannot be mistaken for a physical take.
 
 The app handles recording controls, not game saves or game-specific compatibility.
-Restore the same window size and starting view before replay. It will not bypass
+Restore the same starting view before replay. Automatic mode requires the recorded
+window size; Pointer mode supports proportional resizing. It will not bypass
 a game's input restrictions or adapt to a changed world. Desktop sessions have
 the same 35-minute ceiling as the CLI. Advanced CLI instructions follow.
+
+## Pointer mode and window sizes
+
+Pointer mode stores each position as a fraction of the game client area, together
+with the original pixel coordinates. Replay moves the pointer to that position
+before pressing the button. The window can move, the pointer can start elsewhere,
+and the window can resize proportionally. A different aspect ratio is refused.
+Keep the same UI scale, layout, camera and starting game state. These are viewport
+coordinates, not game-world coordinates: moving objects still require game
+integration or visual feedback to locate them.
+
+This works with game-drawn cursors that follow the Windows pointer. A game that
+locks the Windows pointer and maintains a separate internal cursor needs its own
+integration. Make a short fresh recording and verify the replay in your game.
+Old traces without positions cannot recover them; changing the dropdown cannot
+repair a saved trace. Replay uses the mode stored in the trace.
+
+CLI recording: add `--mouse-mode pointer` to `record --input keyboard-mouse`.
+The default `--mouse-mode auto` keeps relative camera motion and records visible
+Windows menu positions at their original size.
 
 ## CLI: 1. Get the tool and video prerequisites
 
@@ -173,7 +196,7 @@ the game running afterward. If your game supports direct launch, omit `--pid`
 to let the rig launch it; wait at Start until its save and menus are ready.
 Use the normal launcher and PID attachment for games that need a launcher.
 
-New traces store visible menu cursor positions inside the game window, so a
+Automatic-mode traces store visible menu cursor positions inside the game window, so a
 click on a chest's X does not depend on where the pointer started. Hidden-camera
 motion remains relative input. Match the recorded client size and UI scale;
 replay refuses a resized client or a menu point covered by another window.
@@ -280,7 +303,8 @@ closes after a session; the desktop app returns to its saved-session controls.
 | PID/executable mismatch or access denied | Resolve the current game PID and actual executable path, and match privilege levels. Do not use a launcher PID. |
 
 Absolute pointing devices, E1 keys such as Pause, and games drawing their own
-pointer while hiding the Windows cursor need separate compatibility work. This
+pointer while hiding the Windows cursor can use Pointer mode if that cursor
+follows the Windows pointer; internally locked cursors need separate integration. This
 is game input replay, not automation for credentials or private chat text.
 Keep recordings private until you have reviewed them; `sessions/` and replay
 output folders are ignored by Git in this source checkout.

@@ -6,7 +6,7 @@ a video. You choose what to do; no prescribed movement sequence is required.
 Replay repeats those choices and timings. It does not learn to play or adapt to
 changes in the game.
 
-This walkthrough uses the **0.2.1 source snapshot**. npm still serves 0.1.0,
+This walkthrough uses the **0.2.2 source snapshot**. npm still serves 0.1.0,
 which does not include keyboard/mouse support.
 
 ## The easy way: desktop controls
@@ -19,9 +19,9 @@ You need Windows 10/11 x64 and your own installed game.
 1. Open the game in windowed/borderless mode. Preserve a baseline save and pause
    at the starting point (see the save procedure below).
 2. Choose the game in the list. **Refresh** finds newly opened games.
-3. Choose **Mouse input → Pointer / aim** for pointer-driven games, including
+3. Choose **Moving the mouse… → Moves a cursor on screen (like Despiry)** for pointer-driven games, including
    games that draw their own cursor while hiding Windows’ cursor. Leave
-   **Automatic** selected for mouse-look games. Click **Record new session**. Leave **Include video** checked for footage;
+   **Turns my view (like Minecraft)** selected for mouse-look games. Click **Record new session**. Leave **Include video** checked for footage;
    ffmpeg is downloaded and verified once if it is missing (161 MB). Uncheck it
    for input-only recording. Setup can be cancelled with **Stop**.
 4. The app brings your chosen game forward once and shows a five-second countdown.
@@ -47,9 +47,9 @@ window size; Pointer mode supports proportional resizing. It will not bypass
 a game's input restrictions or adapt to a changed world. Desktop sessions have
 the same 35-minute ceiling as the CLI. Advanced CLI instructions follow.
 
-## Pointer mode and window sizes
+## The cursor choice and window sizes
 
-Pointer mode stores each position as a fraction of the game client area, together
+“Moves a cursor on screen” selects Pointer mode. It stores each position as a fraction of the game client area, together
 with the original pixel coordinates. Replay moves the pointer to that position
 before pressing the button. The window can move, the pointer can start elsewhere,
 and the window can resize proportionally. A different aspect ratio is refused.

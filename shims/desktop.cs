@@ -49,7 +49,7 @@ public sealed class QapingRigDesktop : Form {
         button.FlatAppearance.BorderColor=Color.FromArgb(210,216,224); button.Click += click; Controls.Add(button); return button;
     }
     QapingRigDesktop() {
-        Text="Qaping Rig"; ClientSize=new Size(800,722); MinimumSize=new Size(816,761); MaximumSize=new Size(816,761);
+        Text="Qaping Rig"; ClientSize=new Size(800,750); MinimumSize=new Size(816,789); MaximumSize=new Size(816,789);
         StartPosition=FormStartPosition.CenterScreen; BackColor=Color.FromArgb(247,249,252);
         Font=new Font("Segoe UI",10); AutoScaleDimensions=new SizeF(96,96); AutoScaleMode=AutoScaleMode.Dpi;
         LabelAt("Record once. Replay your play.",24,20,744,44,24);
@@ -57,23 +57,24 @@ public sealed class QapingRigDesktop : Form {
         LabelAt("YOUR RUNNING GAME",26,114,600,24,9);
         games.Location=new Point(26,140); games.Size=new Size(596,32); games.DropDownStyle=ComboBoxStyle.DropDownList; games.SelectedIndexChanged += delegate { Buttons(); }; Controls.Add(games);
         refresh=ButtonAt("Refresh",636,134,136,delegate { RefreshGames(); },false);
-        LabelAt("Mouse input",26,185,114,28,10);
-        mouseMode.Location=new Point(150,183); mouseMode.Size=new Size(620,32); mouseMode.DropDownStyle=ComboBoxStyle.DropDownList;
-        mouseMode.Items.Add("Automatic — menus and mouse-look"); mouseMode.Items.Add("Pointer / aim — including a game-drawn cursor"); mouseMode.SelectedIndex=0; Controls.Add(mouseMode);
-        video.Text="Include video (free tool downloads once if needed: 161 MB)"; video.Checked=true; video.Location=new Point(26,227); video.Size=new Size(744,30); Controls.Add(video);
+        LabelAt("Moving the mouse…",26,185,180,28,10);
+        mouseMode.Location=new Point(210,183); mouseMode.Size=new Size(560,32); mouseMode.DropDownStyle=ComboBoxStyle.DropDownList;
+        mouseMode.Items.Add("Turns my view (like Minecraft)"); mouseMode.Items.Add("Moves a cursor on screen (like Despiry)"); mouseMode.SelectedIndex=0; Controls.Add(mouseMode);
+        LabelAt("Choose what happens during play. Menus are recorded in both.",26,218,744,28,10);
+        video.Text="Include video (free tool downloads once if needed: 161 MB)"; video.Checked=true; video.Location=new Point(26,255); video.Size=new Size(744,30); Controls.Add(video);
         record=ButtonAt("Record new session",26,269,280,delegate { StartSession("record"); },true);
         stop=ButtonAt("Stop",322,269,120,delegate { Emit(new {type="stop"}); },false);
-        LabelAt("Pause at your starting point. Click Record, then play after the countdown. F8 stops.",26,323,744,42,10);
-        status.Location=new Point(26,366); status.Size=new Size(744,60); status.Font=new Font("Segoe UI",11,FontStyle.Bold); status.ForeColor=blue; status.Text="Opening your session library…"; Controls.Add(status);
-        LabelAt("SAVED SESSIONS",26,433,600,24,9);
-        sessions.Location=new Point(26,459); sessions.Size=new Size(744,94); sessions.SelectedIndexChanged += delegate { restored.Checked=false; Buttons(); }; Controls.Add(sessions);
-        restored.Text="I restored the starting save, camera and pause/menu state."; restored.Location=new Point(26,558); restored.Size=new Size(744,27); restored.CheckedChanged += delegate { Buttons(); }; Controls.Add(restored);
+        LabelAt("Pause at your starting point. Click Record, then play after the countdown. F8 stops.",26,351,744,42,10);
+        status.Location=new Point(26,394); status.Size=new Size(744,60); status.Font=new Font("Segoe UI",11,FontStyle.Bold); status.ForeColor=blue; status.Text="Opening your session library…"; Controls.Add(status);
+        LabelAt("SAVED SESSIONS",26,461,600,24,9);
+        sessions.Location=new Point(26,487); sessions.Size=new Size(744,94); sessions.SelectedIndexChanged += delegate { restored.Checked=false; Buttons(); }; Controls.Add(sessions);
+        restored.Text="I restored the starting save, camera and pause/menu state."; restored.Location=new Point(26,586); restored.Size=new Size(744,27); restored.CheckedChanged += delegate { Buttons(); }; Controls.Add(restored);
         replay=ButtonAt("Replay selected",26,592,192,delegate { StartSession("replay"); },true);
         watch=ButtonAt("Watch video",230,592,154,delegate { var saved=sessions.SelectedItem as SavedChoice; if(saved!=null) Emit(new {type="watch",session=saved.Id}); },false);
         import=ButtonAt("Import session",396,592,176,delegate { using(var dialog=new OpenFileDialog {Filter="Recorded input (*.kbmscript.json)|*.kbmscript.json|JSON (*.json)|*.json"}) { if(dialog.ShowDialog(this)==DialogResult.OK) Emit(new {type="import",file=dialog.FileName}); } },false);
         folder=ButtonAt("Open recordings",584,592,188,delegate { Emit(new {type="folder"}); },false);
-        details.Location=new Point(26,652); details.Size=new Size(744,48); details.Multiline=true; details.ReadOnly=true; details.ScrollBars=ScrollBars.Vertical; details.BackColor=Color.White; details.BorderStyle=BorderStyle.FixedSingle; details.Visible=false; Controls.Add(details);
-        var detailLink=new LinkLabel {Text="Show details",Location=new Point(671,433),Size=new Size(100,24)};
+        details.Location=new Point(26,680); details.Size=new Size(744,48); details.Multiline=true; details.ReadOnly=true; details.ScrollBars=ScrollBars.Vertical; details.BackColor=Color.White; details.BorderStyle=BorderStyle.FixedSingle; details.Visible=false; Controls.Add(details);
+        var detailLink=new LinkLabel {Text="Show details",Location=new Point(671,461),Size=new Size(100,24)};
         detailLink.Click += delegate { details.Visible=!details.Visible; detailLink.Text=details.Visible?"Hide details":"Show details"; }; Controls.Add(detailLink);
         FormClosing += delegate(object sender, FormClosingEventArgs e) { if(busy) { e.Cancel=true; closeAfterStop=true; Emit(new {type="stop"}); status.Text="Stopping and saving your files…"; } };
         Shown += delegate {

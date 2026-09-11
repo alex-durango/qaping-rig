@@ -1,6 +1,6 @@
 {
   "name": "@qaping/rig",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "homepage": "https://qaping.dev",
   "description": "Record a controller or keyboard/mouse session and replay it against a Windows game, with screen capture, frame times and a run receipt.",

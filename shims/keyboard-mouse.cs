@@ -118,7 +118,7 @@ public sealed class QapingDesktopInput : NativeWindow {
     Process target;
     StatusPanel panel;
     string mode, reason;
-    bool active, done, f9Pressed, loaded, captureReady, preparing;
+    bool active, done, f9Pressed, loaded, captureReady, preparing, pointerMode;
     int maxSeconds, delayMs, next, countdownMs, pendingCountdownMs, lastCountdown = -1;
     double duration, startAt = -1, preparingAt, lastStatusMs = -1000;
     object[] timeline;
@@ -197,23 +197,46 @@ public sealed class QapingDesktopInput : NativeWindow {
     }
     Dictionary<string, object> CaptureCursor() {
         var info = CursorState();
-        if ((info.flags & 1) == 0) return null; // hidden camera cursor: preserve raw deltas
-        var bounds = ClientBounds();
-        int x = info.point.x - bounds.Left, y = info.point.y - bounds.Top;
+        return CursorPosition((info.flags & 1) != 0, info.point.x, info.point.y, ClientBounds(), pointerMode);
+    }
+    static Dictionary<string, object> CursorPosition(bool visible, int screenX, int screenY, Rectangle bounds, bool pointerMode) {
+        if (!visible && !pointerMode) return null; // automatic mode preserves hidden-camera deltas
+        int x = screenX - bounds.Left, y = screenY - bounds.Top;
         if (x < 0 || y < 0 || x >= bounds.Width || y >= bounds.Height)
             throw new Exception("Pointer left the game client area");
-        return new Dictionary<string, object> { {"x", x}, {"y", y}, {"width", bounds.Width}, {"height", bounds.Height} };
+        var cursor = new Dictionary<string, object> { {"x", x}, {"y", y}, {"width", bounds.Width}, {"height", bounds.Height} };
+        if (pointerMode) {
+            cursor["space"] = "client-normalized";
+            cursor["u"] = (x + .5) / bounds.Width; cursor["v"] = (y + .5) / bounds.Height;
+        }
+        return cursor;
+    }
+    static bool Normalized(Dictionary<string, object> cursor) {
+        return cursor.ContainsKey("space") && Str(cursor, "space") == "client-normalized";
+    }
+    static Point CursorPoint(Dictionary<string, object> cursor, Rectangle client) {
+        int width = Int(cursor, "width"), height = Int(cursor, "height");
+        int x = Int(cursor, "x"), y = Int(cursor, "y");
+        if (width < 1 || height < 1 || x < 0 || y < 0 || x >= width || y >= height || client.Width < 1 || client.Height < 1)
+            throw new Exception("Recorded pointer is outside the game client area");
+        if (Normalized(cursor)) {
+            double u = Convert.ToDouble(cursor["u"]), v = Convert.ToDouble(cursor["v"]);
+            if (Double.IsNaN(u) || Double.IsNaN(v) || Math.Abs(u - (x + .5) / width) > 1e-9 || Math.Abs(v - (y + .5) / height) > 1e-9)
+                throw new Exception("Invalid normalized pointer position");
+            if (Math.Abs((double)client.Width * height / (client.Height * (double)width) - 1) > .01)
+                throw new Exception("Game aspect ratio differs from recording; restore the same proportions before replay");
+            x = Math.Min(client.Width - 1, (int)Math.Floor(u * client.Width));
+            y = Math.Min(client.Height - 1, (int)Math.Floor(v * client.Height));
+        } else if (client.Width != width || client.Height != height)
+            throw new Exception("Game client size differs from recording; restore the recorded window size");
+        return new Point(client.Left + x, client.Top + y);
     }
     // Pixel-center normalization avoids desktop acceleration and supports a
-    // moved window / negative monitor origin, while refusing a resized layout.
+    // moved window / negative monitor origin. Pointer mode scales the client;
+    // legacy menu samples require the original client size.
     // https://learn.microsoft.com/windows/win32/api/winuser/ns-winuser-mouseinput
     static Input EncodeCursor(Input input, Dictionary<string, object> cursor, Rectangle client, Rectangle desktop) {
-        int x = Int(cursor, "x"), y = Int(cursor, "y");
-        if (client.Width != Int(cursor, "width") || client.Height != Int(cursor, "height"))
-            throw new Exception("Game client size differs from recording; restore the recorded window size");
-        if (x < 0 || y < 0 || x >= client.Width || y >= client.Height)
-            throw new Exception("Recorded menu cursor is outside the game client area");
-        var point = new Point(client.Left + x, client.Top + y);
+        var point = CursorPoint(cursor, client);
         if (!desktop.Contains(point)) throw new Exception("Recorded menu cursor is outside the current desktop");
         input.data.mouse.dx = Math.Min(65535, (int)Math.Floor((point.X - desktop.Left + .5) * 65536 / desktop.Width));
         input.data.mouse.dy = Math.Min(65535, (int)Math.Floor((point.Y - desktop.Top + .5) * 65536 / desktop.Height));
@@ -296,21 +319,22 @@ public sealed class QapingDesktopInput : NativeWindow {
         object cursor;
         if (e.TryGetValue("cursor", out cursor) && cursor != null) {
             var state = CursorState();
-            if ((state.flags & 1) == 0) throw new Exception("Recorded menu cursor is visible but the game cursor is hidden");
             var c = (Dictionary<string, object>)cursor;
+            if ((state.flags & 1) == 0 && !Normalized(c)) throw new Exception("Recorded menu cursor is visible but the game cursor is hidden");
             var client = ClientBounds();
+            var point = CursorPoint(c, client);
             var positioned = EncodeCursor(Encode(EventMove()), c, client, SystemInformation.VirtualScreen);
             uint owner;
-            GetWindowThreadProcessId(WindowFromPoint(new NativePoint { x=client.Left + Int(c, "x"), y=client.Top + Int(c, "y") }), out owner);
+            GetWindowThreadProcessId(WindowFromPoint(new NativePoint { x=point.X, y=point.Y }), out owner);
             if (owner != target.Id) throw new Exception("Recorded menu point is covered by another window");
             if (Str(e, "kind") == "move") input = positioned;
-            else if (state.point.x != client.Left + Int(c, "x") || state.point.y != client.Top + Int(c, "y")) {
+            else if (state.point.x != point.X || state.point.y != point.Y) {
                 // Some games resolve a button against their last processed move.
                 // Position first; a combined MOVE+DOWN can click the old control.
                 if (SendInput(1, new Input[] { positioned }, Marshal.SizeOf(typeof(Input))) != 1) throw new Exception("SendInput refused menu positioning");
                 Thread.Sleep(35);
                 if (!Focused() || Down(0x77)) { Stop(Down(0x77) ? "operator" : "focus_lost"); return; }
-                GetWindowThreadProcessId(WindowFromPoint(new NativePoint { x=client.Left + Int(c, "x"), y=client.Top + Int(c, "y") }), out owner);
+                GetWindowThreadProcessId(WindowFromPoint(new NativePoint { x=point.X, y=point.Y }), out owner);
                 if (owner != target.Id || ClientBounds() != client) throw new Exception("Game menu changed during cursor positioning");
             }
         }
@@ -381,8 +405,8 @@ public sealed class QapingDesktopInput : NativeWindow {
             Thread.Sleep(1);
         }
     }
-    public static void Run(int pid, string mode, int maxSeconds, int startDelayMs, int countdownMs, bool showStatus, bool waitForCapture) {
-        var app = new QapingDesktopInput { mode=mode, maxSeconds=maxSeconds, delayMs=startDelayMs, countdownMs=countdownMs, captureReady=!waitForCapture };
+    public static void Run(int pid, string mode, int maxSeconds, int startDelayMs, int countdownMs, bool showStatus, bool waitForCapture, bool pointerMode = false) {
+        var app = new QapingDesktopInput { mode=mode, maxSeconds=maxSeconds, delayMs=startDelayMs, countdownMs=countdownMs, captureReady=!waitForCapture, pointerMode=pointerMode };
         try {
             // Use device pixels consistently for cursor capture, client bounds,
             // and the virtual desktop. This affects only the helper thread.
